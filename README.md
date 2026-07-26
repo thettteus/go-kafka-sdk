@@ -2,8 +2,10 @@
 
 Thin, ergonomic Go wrappers around [`confluent-kafka-go`](https://github.com/confluentinc/confluent-kafka-go) for producing and consuming Kafka messages with less boilerplate.
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/tzpereira/go-kafka-sdk.svg)](https://pkg.go.dev/github.com/tzpereira/go-kafka-sdk)
-[![Release](https://img.shields.io/github/v/tag/tzpereira/go-kafka-sdk?label=release)](https://github.com/tzpereira/go-kafka-sdk/tags)
+[![Go Reference](https://pkg.go.dev/badge/github.com/thettteus/go-kafka-sdk.svg)](https://pkg.go.dev/github.com/thettteus/go-kafka-sdk)
+[![CI](https://github.com/thettteus/go-kafka-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/thettteus/go-kafka-sdk/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/tag/thettteus/go-kafka-sdk?label=release)](https://github.com/thettteus/go-kafka-sdk/tags)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## Why
 
@@ -26,13 +28,13 @@ It does **not** add serialization (keys/values are raw `[]byte`), schema registr
 ## Installation
 
 ```sh
-go get github.com/tzpereira/go-kafka-sdk
+go get github.com/thettteus/go-kafka-sdk
 ```
 
 The public API lives in the `kafka` package:
 
 ```go
-import kafkasdk "github.com/tzpereira/go-kafka-sdk/kafka"
+import kafkasdk "github.com/thettteus/go-kafka-sdk/kafka"
 ```
 
 The examples also use [`godotenv`](https://github.com/joho/godotenv) to load a `.env` file automatically:
@@ -58,7 +60,7 @@ import (
 	"syscall"
 
 	_ "github.com/joho/godotenv/autoload"
-	kafkasdk "github.com/tzpereira/go-kafka-sdk/kafka"
+	kafkasdk "github.com/thettteus/go-kafka-sdk/kafka"
 )
 
 func main() {
@@ -116,7 +118,7 @@ import (
 	"syscall"
 
 	_ "github.com/joho/godotenv/autoload"
-	kafkasdk "github.com/tzpereira/go-kafka-sdk/kafka"
+	kafkasdk "github.com/thettteus/go-kafka-sdk/kafka"
 )
 
 func main() {
@@ -297,7 +299,7 @@ if err := kafkasdk.StartConsumers(ctx, 4, newConsumer, handle); err != nil {
 
 ## API reference
 
-All exported symbols live in package `github.com/tzpereira/go-kafka-sdk/kafka`.
+All exported symbols live in package `github.com/thettteus/go-kafka-sdk/kafka`.
 
 ### Types
 
@@ -353,16 +355,25 @@ docker-compose up -d
 
 ## Tests
 
-The `kafka` package has two tests:
+Tests are split into two groups:
 
-- `TestNewConfigFromEnv` — pure unit test, no broker required.
-- `TestProducerConsumerIntegration` — **requires a Kafka broker on `localhost:9092`** (start it with the Docker Compose file above). It produces a message and consumes it back, asserting on topic, key, value, offset, and timestamp.
+- **Unit tests** (e.g. `TestNewConfigFromEnv`) — no broker required. Run them anywhere:
 
-Run everything:
+  ```sh
+  go test -race ./...
+  ```
 
-```sh
-go test -v ./kafka
-```
+- **Integration test** (`TestProducerConsumerIntegration`) — guarded by the
+  `integration` build tag and **requires a Kafka broker on `localhost:9092`**
+  (start one with the Docker Compose file above). It produces a message and
+  consumes it back, asserting on topic, key, value, offset, and timestamp:
+
+  ```sh
+  docker-compose up -d
+  go test -tags integration -race -v ./kafka
+  ```
+
+Both groups run in [CI](.github/workflows/ci.yml) on every push and pull request.
 
 ## Build (amd64 + arm64)
 
@@ -403,15 +414,18 @@ CGO_ENABLED=1 go test  -tags dynamic ./...
 
 1. Start a local broker: `docker-compose up -d`.
 2. Make your change and keep it building: `./scripts/build.sh` (or `go build ./...`).
-3. Run the tests: `go test -v ./kafka`.
-4. Open a pull request against `main` at [tzpereira/go-kafka-sdk](https://github.com/tzpereira/go-kafka-sdk).
+3. Run the tests: `go test -race ./...` (unit) and, with a broker, `go test -tags integration -race ./kafka`.
+4. Open a pull request against `main` at [thettteus/go-kafka-sdk](https://github.com/thettteus/go-kafka-sdk).
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full workflow and [ROADMAP.md](ROADMAP.md) for what's planned.
+
+## License
+
+[MIT](LICENSE) © Mateus Pereira da Silva.
 
 ## Open questions
 
 These could not be determined from the code and should be confirmed before publishing:
 
 - **Supported Kafka broker versions.** The code pins `confluent-kafka-go v1.9.2` and the Docker Compose file uses Confluent Platform 7.5.0 (Kafka 3.5.x), but no explicit compatibility range is documented. What broker versions are officially supported?
-- **License.** There is no `LICENSE` file in the repository. Which license applies?
-- **CI.** No CI workflow was found (`.github/workflows` is absent). Is there a CI pipeline whose badge should be added?
-- **`BlockForever` constant.** It is exported and documented but not referenced anywhere in the SDK (the poll timeout in `Consume`/`ConsumeBatch` is hard-coded to 100 ms). Is it intended for public use, or dead code?
-```
+- **`BlockForever` constant.** It is exported and documented but not referenced anywhere in the SDK (the poll timeout in `Consume`/`ConsumeBatch` is hard-coded to 100 ms). Is it intended for public use, or dead code? (Tracked as a Phase 1 item in [ROADMAP.md](ROADMAP.md).)

@@ -1,4 +1,4 @@
-module github.com/tzpereira/go-kafka-sdk
+module github.com/thettteus/go-kafka-sdk
 
 go 1.24.5
 

@@ -8,7 +8,7 @@ import (
 	"syscall"
 
 	_ "github.com/joho/godotenv/autoload"
-	kafkasdk "github.com/tzpereira/go-kafka-sdk/kafka"
+	kafkasdk "github.com/thettteus/go-kafka-sdk/kafka"
 )
 
 func main() {
