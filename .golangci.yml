@@ -1,0 +1,25 @@
+# golangci-lint configuration.
+# Run locally with: golangci-lint run
+run:
+  timeout: 5m
+  # Integration tests live behind the "integration" build tag; include them
+  # in linting so they don't rot.
+  build-tags:
+    - integration
+
+linters:
+  enable:
+    - errcheck      # unchecked errors
+    - govet         # suspicious constructs
+    - ineffassign   # ineffectual assignments
+    - staticcheck   # bug/perf/style analysis
+    - unused        # unused code
+    - gofmt         # formatting
+    - goimports     # import grouping/ordering
+    - misspell      # common misspellings
+    - revive        # golint successor
+
+issues:
+  # Show all issues, not just a sample.
+  max-issues-per-linter: 0
+  max-same-issues: 0

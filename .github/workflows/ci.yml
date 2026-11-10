@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# librdkafka (via confluent-kafka-go) needs CGO enabled for every job.
+env:
+  CGO_ENABLED: "1"
+
+jobs:
+  build-and-test:
+    name: Build, vet & unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: Build
+        run: go build ./...
+
+      - name: Unit tests
+        # No build tag => integration tests are excluded and no broker is needed.
+        run: go test -race -v ./...
+
+  lint:
+    name: Lint (golangci-lint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: golangci-lint
+        # golangci-lint bundles staticcheck, govet, ineffassign, etc.
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.64.8
+
+  integration:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    services:
+      kafka:
+        # Single-node KRaft broker (no ZooKeeper). Advertises localhost:9092,
+        # which is reachable from the runner via the mapped port below.
+        image: apache/kafka:3.8.0
+        ports:
+          - 9092:9092
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Wait for Kafka
+        run: |
+          for i in $(seq 1 30); do
+            if bash -c 'echo > /dev/tcp/localhost/9092' 2>/dev/null; then
+              echo "Kafka is up"
+              exit 0
+            fi
+            echo "Waiting for Kafka... ($i)"
+            sleep 2
+          done
+          echo "Kafka did not become ready in time" >&2
+          exit 1
+
+      - name: Integration tests
+        run: go test -tags integration -race -v ./kafka

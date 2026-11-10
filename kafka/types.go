@@ -4,7 +4,6 @@ import (
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
-
 type Producer struct {
 	inner *ckafka.Producer
 }

@@ -56,8 +56,8 @@ func (p *Producer) StartDeliveryHandler(ctx context.Context, reportFunc func(*Me
 func (p *Producer) Produce(_ context.Context, msg *Message) error {
 	return p.inner.Produce(&ckafka.Message{
 		TopicPartition: ckafka.TopicPartition{Topic: &msg.Topic, Partition: ckafka.PartitionAny},
-		Value:         msg.Value,
-		Key:           msg.Key,
+		Value:          msg.Value,
+		Key:            msg.Key,
 	}, nil)
 }
 
