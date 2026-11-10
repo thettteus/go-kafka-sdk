@@ -36,7 +36,9 @@ func NewConsumer(brokers []string, groupID string, topics []string, config map[s
 
 // Close shuts down the consumer.
 func (c *Consumer) Close() {
-	c.inner.Close()
+	if err := c.inner.Close(); err != nil {
+		log.Printf("Failed to close consumer: %v", err)
+	}
 }
 
 // Consume reads messages from the Kafka consumer and calls the handler for each message.
